@@ -31,24 +31,27 @@ You ultimate goal is to write a patch that resolves this issue.
 """
 
 
-USER_PROMPT_INIT = """Write a patch for the issue, based on the retrieved context.\n\nYou can import necessary libraries.\n\n
-Return the patch in the format below.\n\nWithin `<file></file>`, replace `...` with actual file path.\n\nWithin `<original></original>`, replace `...` with the original code snippet from the program.\n\nWithin `<patched></patched>`, replace `...` with the fixed version of the original code. When adding orignal code and updated code, pay attention to indentation, as the code is in Python.
+USER_PROMPT_INIT = """Write a patch for the issue, based on the retrieved context.\n\nYou can import necessary libraries. All code necessary to solve the issue must be implemented completely in the answer.\n\n
+Return the patch in the format below.\n\nWithin `<file>...</file>`, replace `...` with actual file path.\n\nWithin `<original>...</original>`, replace `...` with the original code snippet from the program.\n\nWithin `<patched>...</patched>`, replace `...` with the fixed version of the original code. When adding orignal code and updated code, pay attention to indentation, as the code is in Python. Also each modification should be enclosed by ``` ... ```, beggining immediately after the #modification, to signify it is a code block. Apart from these there should be no other ``` used in the response, Whenever you open a block using a tag or ```, you should close it.
 You can write multiple modifications if needed.
 
-```
+Follow below format exactly for each modification:
 # modification 1
+```
 <file>...</file>
 <original>...</original>
 <patched>...</patched>
+```
 
 # modification 2
+```python
 <file>...</file>
 <original>...</original>
 <patched>...</patched>
+```
 
 # modification 3
 ...
-```
 """
 
 

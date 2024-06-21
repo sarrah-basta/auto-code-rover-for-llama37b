@@ -13,7 +13,7 @@ WORKDIR /opt/auto-code-rover/demo_vis/front
 RUN sed -i 's/\r$//' /opt/auto-code-rover/demo_vis/run.sh
 RUN apt install -y curl
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - 
-RUN apt-get install nodejs -y
+RUN apt-get install -y nodejs
 RUN npm i
 RUN npm run build
 

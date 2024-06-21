@@ -42,12 +42,29 @@ Make sure each API call is written as a valid python expression.
 NOTE: a bug location should at least has a "class" or "method".
 """
 
+NEW_PROMPT = """
+You are a helpful assistant that retreive API calls and bug locations from a text into json format.
+If the text contains any information about buggy locations, please extract that information into json format.
+
+Provide your answer in JSON structure like this. Make sure none of the paths are argument placeholders like path/to/file, but are real paths.
+
+{
+    "bug_locations":[{"file": "path/to/file", "class": "class_name", "method": "method_name"}, {"file": "path/to/file", "class": "class_name", "method": "method_name"} ... ]
+}
+
+If adequate information is not provided, leave the answer empty.
+NOTE: a bug location should at least have a "class" or "method".
+"""
+
 
 def run_with_retries(text: str, retries=5) -> tuple[str | None, list[MessageThread]]:
     msg_threads = []
     for idx in range(1, retries + 1):
         logger.debug(
-            "Trying to select search APIs in json. Try {} of {}.", idx, retries
+            "Trying to select search APIs in json where text is {}. Try {} of {}.",
+            text,
+            idx,
+            retries,
         )
 
         res_text, new_thread = run(text)
@@ -56,8 +73,30 @@ def run_with_retries(text: str, retries=5) -> tuple[str | None, list[MessageThre
         extract_status, data = is_valid_json(res_text)
 
         if extract_status != ExtractStatus.IS_VALID_JSON:
-            logger.debug("Invalid json. Will retry.")
-            continue
+            if idx == retries:
+                logger.debug(
+                    "Failed to extract json after {} retries with basic prompt. Trying a new prompt",
+                    retries,
+                )
+                msg_thread = MessageThread()
+                msg_thread.add_system(NEW_PROMPT)
+                msg_thread.add_user(text)
+                res_text, *_ = common.SELECTED_MODEL.call(
+                    msg_thread.to_msg(), response_format="json_object"
+                )
+                extract_status, data = is_valid_json(res_text)
+                if extract_status != ExtractStatus.IS_VALID_JSON:
+                    logger.debug(
+                        "Failed to extract json after {} retries with new prompt. Giving up",
+                        retries,
+                    )
+                else:
+                    msg_thread.add_model(res_text, [])  # no tools
+                    msg_threads.append(msg_thread)
+            else:
+
+                logger.debug("Invalid json. Will retry.")
+                continue
 
         valid, diagnosis = is_valid_response(data)
         if not valid:
