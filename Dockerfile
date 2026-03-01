@@ -5,17 +5,20 @@ RUN git config --global user.email acr@nus.edu.sg
 RUN git config --global user.name acr
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt install -y vim build-essential libssl-dev
-
+RUN apt-get update && apt-get install -y \
+    vim \
+    build-essential \
+    libssl-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 COPY . /opt/auto-code-rover
 
 WORKDIR /opt/auto-code-rover/demo_vis/front
 RUN sed -i 's/\r$//' /opt/auto-code-rover/demo_vis/run.sh
-RUN apt install -y curl
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - 
-RUN apt-get install -y nodejs
-RUN npm i
-RUN npm run build
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install && \
+    npm run build
 
 WORKDIR /opt/auto-code-rover
 RUN conda env create -f environment.yml
